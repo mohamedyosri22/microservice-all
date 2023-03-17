@@ -7,7 +7,6 @@ import com.spring.orderservice.model.Order;
 import com.spring.orderservice.model.OrderLineItems;
 import com.spring.orderservice.repository.OrderRepo;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpMethod;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -22,7 +21,7 @@ import java.util.UUID;
 public class OrderService {
     private final OrderRepo orderRepo;
 
-    private final WebClient webClient;
+    private final WebClient.Builder webClient;
 
     public void placeOrder(OrderRequest orderRequest) {
         Order order = new Order();
@@ -43,14 +42,15 @@ public class OrderService {
         //  Call Inventory-service and place order is product is in
         //  stock
 
-        InvetoryResponse[] response =  webClient.get()
-                .uri("http://localhost:9092/api/inventory"
+        InvetoryResponse[] response =  webClient.build().get()
+                .uri("http://inventory-service/api/inventory"
                         ,uriBuilder -> uriBuilder.queryParam("skuCode",skuCodes)
                                 .build())
                 .retrieve()
                 .bodyToMono(InvetoryResponse[].class)
                 .block();
 
+        assert response != null;
         boolean allProductsIsInStock = Arrays
                 .stream(response)
                 .allMatch(InvetoryResponse::isInStock);
