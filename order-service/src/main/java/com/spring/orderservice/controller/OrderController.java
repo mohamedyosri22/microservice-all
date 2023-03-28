@@ -22,7 +22,7 @@ public class OrderController {
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     @CircuitBreaker(name="mySettings",fallbackMethod = "fallBack")
-    @TimeLimiter(name="mySettings")
+    //@TimeLimiter(name="mySettings")
     @Retry(name="mySettings")
     public CompletableFuture<String> placeOrder(@RequestBody OrderRequest orderRequest){
 

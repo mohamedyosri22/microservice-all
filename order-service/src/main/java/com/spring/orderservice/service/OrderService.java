@@ -3,10 +3,12 @@ package com.spring.orderservice.service;
 import com.spring.orderservice.dto.InvetoryResponse;
 import com.spring.orderservice.dto.OrderLineItemsDto;
 import com.spring.orderservice.dto.OrderRequest;
+import com.spring.orderservice.event.OrderPlacedEvent;
 import com.spring.orderservice.model.Order;
 import com.spring.orderservice.model.OrderLineItems;
 import com.spring.orderservice.repository.OrderRepo;
 import lombok.RequiredArgsConstructor;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -20,8 +22,8 @@ import java.util.UUID;
 @Transactional
 public class OrderService {
     private final OrderRepo orderRepo;
-
     private final WebClient.Builder webClient;
+    private final KafkaTemplate<String,OrderPlacedEvent> kafkaTemplate;
 
     public String placeOrder(OrderRequest orderRequest) {
         Order order = new Order();
@@ -58,6 +60,7 @@ public class OrderService {
 
         if(allProductsIsInStock){
             orderRepo.save(order);
+            kafkaTemplate.send("notification-topic",new OrderPlacedEvent(order.getOrderNumber()));//topic,data
             return "Order placed Successfully";
         }
         else{
